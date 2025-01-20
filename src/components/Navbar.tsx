@@ -1,12 +1,36 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { FaSearch } from "react-icons/fa";
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0); // To track the number of items in the cart
+
+  // Function to update cart count from localStorage
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const totalItems = cart.reduce((acc: number, item: any) => acc + item.quantity, 0);
+    setCartCount(totalItems);
+  };
+
+  useEffect(() => {
+    updateCartCount(); // Update cart count on initial render
+
+    // Listen for changes to cart data in localStorage
+    const handleStorageChange = () => {
+      updateCartCount();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Cleanup event listener on unmount
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const handleMenuItemClick = () => {
     setIsMenuOpen(false); // Close the menu when a link is clicked
@@ -126,9 +150,14 @@ const Navbar: React.FC = () => {
           </div>
           <button
             onClick={() => (window.location.href = "/Carts")}
-            className="flex items-center justify-center text-yellow-400"
+            className="flex items-center justify-center text-yellow-400 relative"
           >
             <MdOutlineShoppingCart className="w-6 h-6" />
+            {cartCount > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-2 py-1">
+                {cartCount}
+              </span>
+            )}
           </button>
           <Link href="/Login" className="text-sm hover:text-yellow-400">
             Login

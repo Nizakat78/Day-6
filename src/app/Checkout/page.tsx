@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 
 const CheckoutPage: React.FC = () => {
+  // Shipping details state
   const [, setShippingDetails] = useState({
     firstName: "",
     lastName: "",
@@ -16,23 +17,23 @@ const CheckoutPage: React.FC = () => {
     address2: "",
   });
 
+  // Handle input changes for shipping details
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setShippingDetails((prev) => ({ ...prev, [name]: value }));
   };
 
-  const cartItems = [
-    {
-      id: 1,
-      name: "Chicken Tikka Kabab",
-      quantity: 3,
-      price: 50,
-      weight: "150 gm net",
-    },
-  ];
+  // Get cart items from localStorage
+  const [cartItems, setCartItems] = useState<any[]>([]);
 
+  useEffect(() => {
+    const cartData = JSON.parse(localStorage.getItem("cart") || "[]");
+    setCartItems(cartData);
+  }, []);
+
+  // Calculate subtotal, discount, tax, and total
   const subTotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const discount = subTotal * 0.25;
+  const discount = subTotal * 0.25; // 25% discount
   const tax = subTotal * 0.1; // Assuming 10% tax
   const total = subTotal - discount + tax;
 
@@ -140,13 +141,13 @@ const CheckoutPage: React.FC = () => {
                   <p className="font-semibold">{item.name}</p>
                   <p className="text-sm text-gray-400">{item.weight}</p>
                 </div>
-                <p>{item.quantity} x ${item.price.toFixed(2)}</p>
+                <p>{item.quantity} x ₹{item.price}</p>
               </div>
             ))}
           </div>
           <div className="flex justify-between mb-2">
             <span>Sub-total</span>
-            <span>${subTotal.toFixed(2)}</span>
+            <span>₹{subTotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between mb-2">
             <span>Shipping</span>
@@ -154,22 +155,22 @@ const CheckoutPage: React.FC = () => {
           </div>
           <div className="flex justify-between mb-2">
             <span>Discount</span>
-            <span>25%</span>
+            <span>- ₹{discount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between mb-4">
             <span>Tax</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>₹{tax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between font-semibold text-lg">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>₹{total.toFixed(2)}</span>
           </div>
         </div>
       </div>
 
       <div className="flex justify-between mt-6">
         <Link href="/Carts">
-        <button className="px-4 py-2 bg-gray-700 text-white rounded">Back to cart</button>
+          <button className="px-4 py-2 bg-gray-700 text-white rounded">Back to cart</button>
         </Link>
         <button className="px-4 py-2 bg-orange-500 text-white rounded">Place an order</button>
       </div>

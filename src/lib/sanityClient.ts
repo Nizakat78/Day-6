@@ -3,9 +3,9 @@ import imageUrlBuilder from '@sanity/image-url';
 
 // Create a Sanity client
 export const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!, // Replace with your project ID
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!, // Replace with your dataset name
-  apiVersion: '2021-08-31',
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!, // Ensure this is set in your .env.local
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!, // Ensure this is set in your .env.local
+  apiVersion: '2021-08-31', // Check for the latest API version if needed
   useCdn: true,
 });
 
@@ -13,4 +13,7 @@ export const client = createClient({
 const builder = imageUrlBuilder(client);
 
 // Create a helper function to generate image URLs
-export const urlFor = (source: unknown) => builder.image(source);
+export const urlFor = (source: any) => {
+  console.log("Sanity Image Source:", source);
+  return builder.image(source);
+};

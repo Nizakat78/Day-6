@@ -12,6 +12,7 @@ const Navbar: React.FC = () => {
   // Function to update cart count from localStorage
   const updateCartCount = () => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalItems = cart.reduce((acc: number, item: any) => acc + item.quantity, 0);
     setCartCount(totalItems);
   };

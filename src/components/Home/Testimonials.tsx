@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React from "react";
 
 const Testimonials = () => {
@@ -26,9 +27,11 @@ const Testimonials = () => {
           <div className="bg-white p-10 rounded-lg shadow-lg w-full md:w-1/2 relative">
             {/* Circular Image */}
             <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
-              <img
+              <Image
                 src="Man.svg"
                 alt="testimonial"
+                width={20}
+                height={20}
                 className="rounded-full w-20 h-20 border-4 border-white shadow-md"
               />
             </div>

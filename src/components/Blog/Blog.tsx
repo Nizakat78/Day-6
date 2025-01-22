@@ -12,6 +12,7 @@ import { FaAngleDoubleRight } from "react-icons/fa";
 
 
 
+
 const BlogPage: React.FC = () => {
   const recentPosts = [
     {

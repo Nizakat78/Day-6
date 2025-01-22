@@ -56,7 +56,7 @@ export default function FoodCategory() {
       
       
                 
-               <img
+               <Image
                 src={urlFor(chef.image).width(300).url()} // Generate image URL
                 alt={chef.name}
                 className="w-full h-auto object-cover"

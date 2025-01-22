@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useState, useEffect } from "react";
 import { Food } from "../../app/types/food";
@@ -9,6 +10,7 @@ import { LiaSearchSolid } from "react-icons/lia";
 import Link from "next/link";
 
 // Function to fetch food data from Sanity with filtering
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getFoods(page: number = 1, filters: any): Promise<Food[]> {
   const query = `*[_type == "food" && 
                   (name match "${filters.search || ''}*" || 
@@ -20,8 +22,6 @@ async function getFoods(page: number = 1, filters: any): Promise<Food[]> {
     price,
     originalPrice,
     tags,
-    description,
-    available,
     image {
       asset -> {
         _id,
@@ -67,7 +67,11 @@ export default function FoodsPage() {
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
-    e.target.name === "min" ? setPriceMin(value) : setPriceMax(value);
+    if (e.target.name === "min") {
+      setPriceMin(value); // Correctly call the setter for priceMin
+    } else if (e.target.name === "max") {
+      setPriceMax(value); // Correctly call the setter for priceMax
+    }
   };
 
   return (
@@ -103,12 +107,6 @@ export default function FoodsPage() {
                         )}
                         <span className="text-xl font-bold">₹{food.price}</span>
                       </div>
-                      {food.available ? (
-                        <span className="text-sm text-green-500">Available</span>
-                      ) : (
-                        <span className="text-sm text-red-500">Unavailable</span>
-                      )}
-                      <p className="text-sm text-gray-500">{food.description}</p>
                     </div>
                   </div>
                 </Link>

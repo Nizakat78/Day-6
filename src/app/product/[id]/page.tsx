@@ -1,9 +1,21 @@
-'use client'; 
+'use client';
+
 import { useEffect, useState } from 'react';
 import { client, urlFor } from '../../../lib/sanityClient';
 import { Food } from '../../types/food';
+import Image from 'next/image';
 
-// Fetch single product data from Sanity
+// Define the type for Cart Item
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  total: number;
+  image: string;
+}
+
+// Fetch product data
 async function getProduct(id: string): Promise<Food | null> {
   const query = `*[_type == "food" && _id == $id][0]{
     _id,
@@ -19,34 +31,39 @@ async function getProduct(id: string): Promise<Food | null> {
     }
   }`;
   const product = await client.fetch(query, { id });
-  return product;
+  return product || null;
 }
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const [quantity, setQuantity] = useState(1); 
+// Update type for ProductPageProps to include params correctly
+type ProductPageProps = {
+  params: {
+    id: string;
+  };
+};
+
+export default function ProductDetailPage({ params }: ProductPageProps) {
+  const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Food | null>(null);
 
   // Fetch product data when the component mounts
   useEffect(() => {
-    async function fetchProduct() {
+    const fetchProduct = async () => {
       const fetchedProduct = await getProduct(params.id);
       setProduct(fetchedProduct);
-    }
+    };
     fetchProduct();
-  }, [params.id]);
+  }, [params.id]); // Ensure the effect is triggered when `params.id` changes
 
   // Handle quantity changes
   const handleQuantityChange = (type: 'increment' | 'decrement') => {
-    setQuantity((prev) =>
-      type === 'increment' ? prev + 1 : Math.max(1, prev - 1)
-    );
+    setQuantity((prev) => type === 'increment' ? prev + 1 : Math.max(1, prev - 1));
   };
 
   // Handle add to cart
   const handleAddToCart = () => {
     if (!product) return;
 
-    const cartItem = {
+    const cartItem: CartItem = {
       id: product._id,
       name: product.name,
       price: product.price,
@@ -55,23 +72,27 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       image: urlFor(product.image).url(),
     };
 
-    // Save to localStorage or global cart state
-    const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const updatedCart = [...existingCart];
+    // Get existing cart items from localStorage
+    const existingCart: CartItem[] = JSON.parse(localStorage.getItem('cart') || '[]');
+    const updatedCart: CartItem[] = [...existingCart];
 
     // Check if the product is already in the cart
-    const existingProduct = updatedCart.find((item: any) => item.id === cartItem.id);
+    const existingProduct = updatedCart.find((item) => item.id === cartItem.id);
     if (existingProduct) {
-      existingProduct.quantity += quantity; 
+      // If product exists, update quantity and total
+      existingProduct.quantity += quantity;
       existingProduct.total = existingProduct.price * existingProduct.quantity;
     } else {
-      updatedCart.push(cartItem); 
+      // Otherwise, add the new product to the cart
+      updatedCart.push(cartItem);
     }
 
+    // Save updated cart to localStorage
     localStorage.setItem('cart', JSON.stringify(updatedCart));
     alert(`${product.name} has been added to your cart!`);
   };
 
+  // Show loading message if the product is not fetched yet
   if (!product) return <div className="text-center text-gray-600">Loading...</div>;
 
   return (
@@ -79,10 +100,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white shadow-lg rounded-lg p-6">
         {/* Product Image */}
         <div className="rounded-lg overflow-hidden">
-          <img
+          <Image
             src={urlFor(product.image!).url()}
             alt={product.name}
             className="w-full h-auto object-cover"
+            width={500}
+            height={500}
           />
         </div>
 

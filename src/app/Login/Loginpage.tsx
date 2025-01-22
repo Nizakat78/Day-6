@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 
 const Loginpage = () => {
   return (
@@ -53,7 +54,7 @@ const Loginpage = () => {
             </div>
             <div className="space-y-4">
               <button className="w-full py-2 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-100">
-                <img
+                <Image
                   src="/Google.svg"
                   alt="Google"
                   className="h-5 w-5 mr-2"
@@ -61,7 +62,7 @@ const Loginpage = () => {
                 Login with Google
               </button>
               <button className="w-full py-2 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-100">
-                <img
+                <Image
                   src="/Apple.svg"
                   alt="Apple"
                   className="h-5 w-5 mr-2"

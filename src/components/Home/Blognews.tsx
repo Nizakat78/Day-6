@@ -2,6 +2,7 @@ import React from "react";
 import { FaRegThumbsUp } from "react-icons/fa6";
 import { FaRegMessage } from "react-icons/fa6";
 import { FaShareAlt } from "react-icons/fa";
+import Image from "next/image";
 
 
 
@@ -50,9 +51,11 @@ const Blognews = () => {
               className="bg-gray-800 rounded-lg overflow-hidden shadow-lg text-left"
             >
               {/* Blog Image */}
-              <img
+              <Image
                 src={blog.image}
                 alt={blog.title}
+                width={56}
+                height={56}
                 className="w-full h-56 object-cover"
               />
               {/* Blog Content */}

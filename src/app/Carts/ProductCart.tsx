@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { MdOutlineShoppingCart } from 'react-icons/md';
 import Link from 'next/link';
 
+
 interface Product {
   id: string;
   name: string;

@@ -1,47 +1,93 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
-import { useState, useEffect } from "react";
-import { Food } from "../../app/types/food";
-import { client, urlFor } from "../../lib/sanityClient";
+"use client"
+import { createClient } from '@sanity/client';
+import imageUrlBuilder from '@sanity/image-url';
+import { Food } from '../../app/types/food';
 
-import { FaAnglesLeft } from "react-icons/fa6";
-import { FaAngleDoubleRight } from "react-icons/fa";
-import { LiaSearchSolid } from "react-icons/lia";
-import Link from "next/link";
+// Sanity client configuration
+export const client = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!, // Ensure env variables are set correctly
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
+  apiVersion: '2021-08-31',
+  useCdn: true, // Use the CDN for faster responses
+});
 
-// Function to fetch food data from Sanity with filtering
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getFoods(page: number = 1, filters: any): Promise<Food[]> {
+// Image URL builder for Sanity
+const builder = imageUrlBuilder(client);
+export const urlFor = (source: Parameters<typeof builder.image>[0]) =>
+  builder.image(source);
+
+// Fetch food items from Sanity
+export async function getFoods(
+  page: number = 1,
+  filters: {
+    search?: string;
+    categories?: string[];
+    priceMin?: number;
+    priceMax?: number;
+  } = {}
+): Promise<Food[]> {
   const query = `*[_type == "food" && 
-                  (name match "${filters.search || ''}*" || 
-                   category in [${filters.categories.map((cat: string) => `"${cat}"`).join(', ')}]) &&
-                  price >= ${filters.priceMin} && price <= ${filters.priceMax}]{
+    (name match "${filters.search || ''}*" || 
+    category in [${(filters.categories || [])
+      .map((cat) => `"${cat}"`)
+      .join(', ')}]) &&
+    price >= ${filters.priceMin || 0} && price <= ${filters.priceMax || 100}] {
     _id,
     name,
     category,
     price,
     originalPrice,
     tags,
+    description,
+    available,
     image {
       asset -> {
-        _id,
         url
       }
     }
-  }[${(page - 1) * 9}...${page * 9}]`; // Show 9 items per page
+  }[${(page - 1) * 9}...${page * 9}]`;
 
-  const foods = await client.fetch(query);
-  return foods;
+  try {
+    const foods: Food[] = await client.fetch(query);
+    return foods;
+  } catch (error) {
+    console.error('Error fetching foods:', error);
+    return [];
+  }
 }
+
+// Food type definition
+export interface Food {
+  _id: string;
+  name: string;
+  category: string;
+  price: number;
+  originalPrice?: number;
+  tags?: string[];
+  description?: string;
+  available?: boolean;
+  image?: {
+    asset: {
+      url: string;
+    };
+  };
+}
+
+// FoodsPage component
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+import { LiaSearchSolid } from 'react-icons/lia';
 
 export default function FoodsPage() {
   const [foods, setFoods] = useState<Food[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(3); // Update dynamically if needed
-  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [search, setSearch] = useState<string>('');
   const [categories, setCategories] = useState<string[]>([]);
-  const [priceMin, setPriceMin] = useState(0);
-  const [priceMax, setPriceMax] = useState(100);
+  const [priceMin, setPriceMin] = useState<number>(0);
+  const [priceMax, setPriceMax] = useState<number>(100);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [totalPages, setTotalPages] = useState<number>(3); // Adjust dynamically if required
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -53,10 +99,6 @@ export default function FoodsPage() {
     fetchFoods();
   }, [currentPage, search, categories, priceMin, priceMax]);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   const handleCategoryChange = (category: string) => {
     setCategories((prev) =>
       prev.includes(category)
@@ -65,20 +107,11 @@ export default function FoodsPage() {
     );
   };
 
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (e.target.name === "min") {
-      setPriceMin(value); // Correctly call the setter for priceMin
-    } else if (e.target.name === "max") {
-      setPriceMax(value); // Correctly call the setter for priceMax
-    }
-  };
-
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Products Grid */}
+          {/* Product Grid */}
           <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {foods.length > 0 ? (
               foods.map((food) => (
@@ -156,8 +189,7 @@ export default function FoodsPage() {
                 min="0"
                 max="100"
                 value={priceMin}
-                name="min"
-                onChange={handlePriceChange}
+                onChange={(e) => setPriceMin(Number(e.target.value))}
                 className="w-full"
               />
               <input
@@ -165,8 +197,7 @@ export default function FoodsPage() {
                 min="0"
                 max="100"
                 value={priceMax}
-                name="max"
-                onChange={handlePriceChange}
+                onChange={(e) => setPriceMax(Number(e.target.value))}
                 className="w-full"
               />
               <p>From ₹{priceMin} to ₹{priceMax}</p>
@@ -178,10 +209,10 @@ export default function FoodsPage() {
         <div className="mt-8 flex justify-center gap-4">
           <button
             className="px-4 py-2 bg-white text-yellow-500 rounded-md shadow-md border border-yellow-500"
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage <= 1}
           >
-            <FaAnglesLeft />
+           
           </button>
           {Array.from({ length: totalPages }).map((_, index) => (
             <button
@@ -189,18 +220,14 @@ export default function FoodsPage() {
               className={`px-4 py-2 bg-white text-yellow-500 rounded-md shadow-md border border-yellow-500 ${
                 currentPage === index + 1 ? "bg-yellow-200" : ""
               }`}
-              onClick={() => handlePageChange(index + 1)}
+              onClick={() => setCurrentPage(index + 1)}
             >
               {index + 1}
             </button>
           ))}
-          <button
-            className="px-4 py-2 bg-white text-yellow-500 rounded-md shadow-md border border-yellow-500"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-          >
-            <FaAngleDoubleRight />
-          </button>
+          
+           
+
         </div>
       </div>
     </div>
